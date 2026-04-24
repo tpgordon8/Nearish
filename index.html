@@ -98,6 +98,13 @@ function toMin(hhmm) {
   return h * 60 + m;
 }
 
+function fmt12(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
 createApp({
   setup() {
     const now = ref(new Date());
@@ -124,7 +131,7 @@ createApp({
         const d = await r.json();
         const c = d.current_condition[0];
         weather.value = {
-          temp: c.temp_C, feels: c.FeelsLikeC,
+          temp: c.temp_F, feels: c.FeelsLikeF,
           desc: c.weatherDesc[0].value, hum: c.humidity
         };
       } catch {
@@ -199,7 +206,8 @@ createApp({
       const po = getTZOffMin(TZ_T), mo = getTZOffMin(TZ_M);
       const diff = convFrom.value === 'Paris' ? mo - po : po - mo;
       const total = ((h * 60 + m + diff) % 1440 + 1440) % 1440;
-      return String(Math.floor(total / 60)).padStart(2, '0') + ':' + String(total % 60).padStart(2, '0');
+      const th = Math.floor(total / 60), tm = total % 60;
+      return fmt12(`${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}`);
     });
 
     return {
@@ -207,7 +215,7 @@ createApp({
       convTime, convFrom, convertedTime, showSettings,
       taraTime, meagTime, taraDate, meagDate,
       currentActivity, nextActivity, countdown,
-      bgGradient, overlapBarStyle, nowBarStyle, isCurrentEvent,
+      bgGradient, overlapBarStyle, nowBarStyle, isCurrentEvent, fmt12,
     };
   },
 
@@ -239,12 +247,12 @@ createApp({
       <div v-if="currentActivity">
         <div class="text-white/70 text-xs uppercase tracking-widest mb-1">Happening now</div>
         <div class="text-white font-semibold text-base">{{ currentActivity.icon }} {{ currentActivity.title }}</div>
-        <div class="text-white/85 text-xs mt-0.5">{{ currentActivity.loc }} · until {{ currentActivity.end }}</div>
+        <div class="text-white/85 text-xs mt-0.5">{{ currentActivity.loc }} · until {{ fmt12(currentActivity.end) }}</div>
       </div>
       <div v-if="nextActivity" :class="currentActivity ? 'border-t border-white/10 pt-3' : ''">
         <div class="text-white/70 text-xs uppercase tracking-widest mb-1">Up next</div>
         <div class="text-white font-medium text-sm">{{ nextActivity.icon }} {{ nextActivity.title }}</div>
-        <div class="text-white/85 text-xs mt-0.5">{{ nextActivity.loc }} · at {{ nextActivity.time }}</div>
+        <div class="text-white/85 text-xs mt-0.5">{{ nextActivity.loc }} · at {{ fmt12(nextActivity.time) }}</div>
       </div>
     </div>
 
@@ -253,9 +261,9 @@ createApp({
         <div class="text-white/70 text-xs uppercase tracking-widest mb-2">Weather</div>
         <template v-if="weather">
           <template v-if="weather.temp !== '--'">
-            <div class="text-white text-2xl font-bold">{{ weather.temp }}°C</div>
+            <div class="text-white text-2xl font-bold">{{ weather.temp }}°F</div>
             <div class="text-white/90 text-xs mt-1 leading-tight">{{ weather.desc }}</div>
-            <div class="text-white/70 text-xs mt-1">feels {{ weather.feels }}° · {{ weather.hum }}%</div>
+            <div class="text-white/70 text-xs mt-1">feels {{ weather.feels }}°F · {{ weather.hum }}%</div>
           </template>
           <div v-else class="text-white/70 text-sm">unavailable</div>
         </template>
@@ -301,7 +309,7 @@ createApp({
             <span class="text-lg shrink-0 mt-0.5">{{ e.icon }}</span>
             <div class="flex-1 min-w-0">
               <div class="text-white text-sm font-medium leading-tight">{{ e.title }}</div>
-              <div class="text-white/70 text-xs mt-0.5 truncate">{{ e.time }}–{{ e.end }} · {{ e.loc }}</div>
+              <div class="text-white/70 text-xs mt-0.5 truncate">{{ fmt12(e.time) }}–{{ fmt12(e.end) }} · {{ e.loc }}</div>
             </div>
           </div>
         </div>
