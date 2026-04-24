@@ -136,9 +136,9 @@ createApp({
       new Intl.DateTimeFormat('en-US', { timeZone: tz, ...opts }).format(now.value);
 
     const taraTime = computed(() =>
-      fmt(TZ_T, { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }));
+      fmt(TZ_T, { hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true }));
     const meagTime = computed(() =>
-      fmt(TZ_M, { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }));
+      fmt(TZ_M, { hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true }));
     const taraDate = computed(() =>
       fmt(TZ_T, { weekday:'short', month:'short', day:'numeric' }));
     const meagDate = computed(() =>
