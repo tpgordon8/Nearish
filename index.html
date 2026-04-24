@@ -10,22 +10,22 @@
     * { box-sizing: border-box; }
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     .glass {
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(0,0,0,0.28);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.18);
     }
     .gbtn {
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
       color: white;
       cursor: pointer;
       transition: background 0.15s;
     }
-    .gbtn:hover { background: rgba(255,255,255,0.25); }
+    .gbtn:hover { background: rgba(255,255,255,0.28); }
     .ginput {
       background: rgba(255,255,255,0.12) !important;
-      border: 1px solid rgba(255,255,255,0.25) !important;
+      border: 1px solid rgba(255,255,255,0.3) !important;
       color: white !important;
       outline: none;
     }
@@ -176,13 +176,13 @@ createApp({
 
     const bgGradient = computed(() => {
       const h = parseInt(getParts(now.value, TZ_T).hour) % 24;
-      if (h >= 5  && h < 7)  return 'linear-gradient(135deg,#f093fb,#f5576c,#fda085)';
-      if (h >= 7  && h < 10) return 'linear-gradient(135deg,#667eea,#764ba2,#6fb1fc)';
-      if (h >= 10 && h < 14) return 'linear-gradient(135deg,#4facfe,#00c6fb,#56d8a4)';
-      if (h >= 14 && h < 17) return 'linear-gradient(135deg,#43e97b,#38f9d7,#4facfe)';
-      if (h >= 17 && h < 21) return 'linear-gradient(135deg,#fa709a,#fee140,#f6d365)';
-      if (h >= 21)            return 'linear-gradient(135deg,#a18cd1,#fbc2eb,#ff9a9e)';
-      return 'linear-gradient(135deg,#1a1a2e,#16213e,#2c4a7c)';
+      if (h >= 5  && h < 7)  return 'linear-gradient(135deg,#614385,#516395,#c471ed)';
+      if (h >= 7  && h < 10) return 'linear-gradient(135deg,#1a237e,#1565c0,#283593)';
+      if (h >= 10 && h < 14) return 'linear-gradient(135deg,#006064,#00796b,#0288d1)';
+      if (h >= 14 && h < 17) return 'linear-gradient(135deg,#1b5e20,#0277bd,#006064)';
+      if (h >= 17 && h < 21) return 'linear-gradient(135deg,#7b1fa2,#b71c1c,#e65100)';
+      if (h >= 21)            return 'linear-gradient(135deg,#1a0533,#311b92,#4a148c)';
+      return 'linear-gradient(135deg,#0d0d1a,#0d1b2a,#1a0533)';
     });
 
     const overlapBarStyle = computed(() => ({ left: '54.17%', width: '37.5%' }));
@@ -217,65 +217,65 @@ createApp({
 
     <div class="text-center pt-6 pb-2">
       <h1 class="text-4xl font-bold text-white tracking-tight">nearish</h1>
-      <p class="text-white/50 text-sm mt-1">Tara &amp; Meag · always close</p>
+      <p class="text-white/85 text-sm mt-1">Tara &amp; Meag · always close</p>
     </div>
 
     <div class="grid grid-cols-2 gap-3">
       <div class="glass rounded-2xl p-4 text-center">
-        <div class="text-white/50 text-xs mb-1">Tara 🌊</div>
+        <div class="text-white/85 text-xs mb-1">Tara 🌊</div>
         <div class="text-white text-2xl font-bold font-mono tracking-wide">{{ taraTime }}</div>
-        <div class="text-white/40 text-xs mt-1">Cap Ferrat</div>
-        <div class="text-white/50 text-xs mt-0.5">{{ taraDate }}</div>
+        <div class="text-white/70 text-xs mt-1">Cap Ferrat</div>
+        <div class="text-white/85 text-xs mt-0.5">{{ taraDate }}</div>
       </div>
       <div class="glass rounded-2xl p-4 text-center">
-        <div class="text-white/50 text-xs mb-1">Meag 🏙️</div>
+        <div class="text-white/85 text-xs mb-1">Meag 🏙️</div>
         <div class="text-white text-2xl font-bold font-mono tracking-wide">{{ meagTime }}</div>
-        <div class="text-white/40 text-xs mt-1">Philadelphia</div>
-        <div class="text-white/50 text-xs mt-0.5">{{ meagDate }}</div>
+        <div class="text-white/70 text-xs mt-1">Philadelphia</div>
+        <div class="text-white/85 text-xs mt-0.5">{{ meagDate }}</div>
       </div>
     </div>
 
     <div v-if="currentActivity || nextActivity" class="glass rounded-2xl p-4 space-y-3">
       <div v-if="currentActivity">
-        <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Happening now</div>
+        <div class="text-white/70 text-xs uppercase tracking-widest mb-1">Happening now</div>
         <div class="text-white font-semibold text-base">{{ currentActivity.icon }} {{ currentActivity.title }}</div>
-        <div class="text-white/50 text-xs mt-0.5">{{ currentActivity.loc }} · until {{ currentActivity.end }}</div>
+        <div class="text-white/85 text-xs mt-0.5">{{ currentActivity.loc }} · until {{ currentActivity.end }}</div>
       </div>
       <div v-if="nextActivity" :class="currentActivity ? 'border-t border-white/10 pt-3' : ''">
-        <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Up next</div>
+        <div class="text-white/70 text-xs uppercase tracking-widest mb-1">Up next</div>
         <div class="text-white font-medium text-sm">{{ nextActivity.icon }} {{ nextActivity.title }}</div>
-        <div class="text-white/50 text-xs mt-0.5">{{ nextActivity.loc }} · at {{ nextActivity.time }}</div>
+        <div class="text-white/85 text-xs mt-0.5">{{ nextActivity.loc }} · at {{ nextActivity.time }}</div>
       </div>
     </div>
 
     <div class="grid grid-cols-2 gap-3">
       <div class="glass rounded-2xl p-4">
-        <div class="text-white/40 text-xs uppercase tracking-widest mb-2">Weather</div>
+        <div class="text-white/70 text-xs uppercase tracking-widest mb-2">Weather</div>
         <template v-if="weather">
           <template v-if="weather.temp !== '--'">
             <div class="text-white text-2xl font-bold">{{ weather.temp }}°C</div>
-            <div class="text-white/60 text-xs mt-1 leading-tight">{{ weather.desc }}</div>
-            <div class="text-white/40 text-xs mt-1">feels {{ weather.feels }}° · {{ weather.hum }}%</div>
+            <div class="text-white/90 text-xs mt-1 leading-tight">{{ weather.desc }}</div>
+            <div class="text-white/70 text-xs mt-1">feels {{ weather.feels }}° · {{ weather.hum }}%</div>
           </template>
-          <div v-else class="text-white/40 text-sm">unavailable</div>
+          <div v-else class="text-white/70 text-sm">unavailable</div>
         </template>
-        <div v-else class="text-white/40 text-sm">loading...</div>
+        <div v-else class="text-white/70 text-sm">loading...</div>
       </div>
       <div class="glass rounded-2xl p-4 text-center flex flex-col justify-center">
-        <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Reunion</div>
+        <div class="text-white/70 text-xs uppercase tracking-widest mb-1">Reunion</div>
         <div class="text-white text-3xl font-bold">{{ countdown.days }}</div>
-        <div class="text-white/50 text-xs mt-1">{{ countdown.label }}</div>
+        <div class="text-white/85 text-xs mt-1">{{ countdown.label }}</div>
       </div>
     </div>
 
     <div class="glass rounded-2xl p-4">
-      <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Golden Hours</div>
-      <div class="text-white/60 text-xs mb-3">Both awake: 1 PM–10 PM Paris · 7 AM–4 PM Philly</div>
+      <div class="text-white/70 text-xs uppercase tracking-widest mb-1">Golden Hours</div>
+      <div class="text-white/90 text-xs mb-3">Both awake: 1 PM–10 PM Paris · 7 AM–4 PM Philly</div>
       <div class="relative h-3 bg-white/10 rounded-full overflow-hidden">
         <div class="absolute inset-y-0 bg-yellow-300/50 rounded-full" :style="overlapBarStyle"></div>
         <div class="absolute inset-y-0 w-0.5 bg-white shadow rounded-full" :style="nowBarStyle"></div>
       </div>
-      <div class="flex justify-between text-white/30 text-xs mt-2 px-0.5">
+      <div class="flex justify-between text-white/55 text-xs mt-2 px-0.5">
         <span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>12a</span>
       </div>
     </div>
@@ -284,7 +284,7 @@ createApp({
       <button @click="agendaOpen = !agendaOpen"
         class="w-full px-4 py-3 flex justify-between items-center text-white hover:bg-white/10 transition-colors text-left">
         <span class="font-semibold text-sm">📅 Tara's Schedule</span>
-        <span class="text-white/40 text-xs">{{ agendaOpen ? '▲ hide' : '▼ show' }}</span>
+        <span class="text-white/70 text-xs">{{ agendaOpen ? '▲ hide' : '▼ show' }}</span>
       </button>
       <div v-if="agendaOpen">
         <div class="flex gap-2 px-4 pb-2 overflow-x-auto">
@@ -297,11 +297,11 @@ createApp({
         <div class="px-4 pb-4 space-y-1.5">
           <div v-for="e in AGENDA[activeDay].events" :key="e.time"
             class="flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors"
-            :class="isCurrentEvent(e) ? 'bg-white/20 ring-1 ring-white/30' : 'bg-white/5 hover:bg-white/10'">
+            :class="isCurrentEvent(e) ? 'bg-white/20 ring-1 ring-white/30' : 'bg-white/8 hover:bg-white/15'">
             <span class="text-lg shrink-0 mt-0.5">{{ e.icon }}</span>
             <div class="flex-1 min-w-0">
               <div class="text-white text-sm font-medium leading-tight">{{ e.title }}</div>
-              <div class="text-white/40 text-xs mt-0.5 truncate">{{ e.time }}–{{ e.end }} · {{ e.loc }}</div>
+              <div class="text-white/70 text-xs mt-0.5 truncate">{{ e.time }}–{{ e.end }} · {{ e.loc }}</div>
             </div>
           </div>
         </div>
@@ -309,7 +309,7 @@ createApp({
     </div>
 
     <div class="glass rounded-2xl p-4">
-      <div class="text-white/40 text-xs uppercase tracking-widest mb-3">Time Converter</div>
+      <div class="text-white/70 text-xs uppercase tracking-widest mb-3">Time Converter</div>
       <div class="flex gap-2">
         <input v-model="convTime" type="time" class="ginput flex-1 rounded-xl px-3 py-2 text-sm min-w-0">
         <select v-model="convFrom" class="ginput rounded-xl px-3 py-2 text-sm">
@@ -319,24 +319,24 @@ createApp({
       </div>
       <div v-if="convertedTime" class="mt-3 flex items-baseline gap-2">
         <span class="text-white text-2xl font-bold font-mono">{{ convertedTime }}</span>
-        <span class="text-white/50 text-sm">in {{ convFrom === 'Paris' ? 'Philadelphia' : 'Cap Ferrat' }}</span>
+        <span class="text-white/85 text-sm">in {{ convFrom === 'Paris' ? 'Philadelphia' : 'Cap Ferrat' }}</span>
       </div>
-      <div v-else class="mt-2 text-white/30 text-xs">pick a time above to convert</div>
+      <div v-else class="mt-2 text-white/55 text-xs">pick a time above to convert</div>
     </div>
 
     <div class="glass rounded-2xl overflow-hidden">
       <button @click="showSettings = !showSettings"
         class="w-full px-4 py-3 flex justify-between items-center hover:bg-white/10 transition-colors">
-        <span class="text-white/50 text-xs uppercase tracking-widest">⚙ Settings</span>
-        <span class="text-white/30 text-xs">{{ showSettings ? '▲' : '▼' }}</span>
+        <span class="text-white/85 text-xs uppercase tracking-widest">⚙ Settings</span>
+        <span class="text-white/55 text-xs">{{ showSettings ? '▲' : '▼' }}</span>
       </button>
       <div v-if="showSettings" class="px-4 pb-4">
-        <label class="text-white/50 text-xs block mb-1.5">Reunion Date</label>
+        <label class="text-white/85 text-xs block mb-1.5">Reunion Date</label>
         <input v-model="reunionDate" type="date" class="ginput rounded-xl px-3 py-2 text-sm w-full">
       </div>
     </div>
 
-    <div class="text-center text-white/20 text-xs pt-2">made with love · nearish</div>
+    <div class="text-center text-white/45 text-xs pt-2">made with love · nearish</div>
 
   </div>
 </div>
