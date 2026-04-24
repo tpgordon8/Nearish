@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>nearish 💕</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .glass {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.22);
+    }
+    .gbtn {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .gbtn:hover { background: rgba(255,255,255,0.25); }
+    .ginput {
+      background: rgba(255,255,255,0.12) !important;
+      border: 1px solid rgba(255,255,255,0.25) !important;
+      color: white !important;
+      outline: none;
+    }
+    .ginput:focus { outline: 2px solid rgba(255,255,255,0.4); outline-offset: 1px; }
+    option { background: #3a3a5c; color: white; }
+    ::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.6; }
+    input[type="time"]::-webkit-datetime-edit { color: white; }
+    input[type="date"]::-webkit-datetime-edit { color: white; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+const TZ_T = 'Europe/Paris';
+const TZ_M = 'America/New_York';
+
+const AGENDA = {
+  '2026-04-26': { label: 'Sun Apr 26', events: [
+    { time:'14:00', end:'16:00', icon:'✈️', title:'Arrival & Check-in',    loc:'Grand-Hôtel du Cap-Ferrat' },
+    { time:'16:00', end:'18:30', icon:'🏊', title:'Pool & Settle In',       loc:'Hotel Pool' },
+    { time:'18:30', end:'20:00', icon:'🍷', title:'Sunset Drinks',          loc:'Bar de la Rotonde' },
+    { time:'20:00', end:'22:30', icon:'🍽️', title:'Welcome Dinner',         loc:'Le Cap Restaurant' },
+  ]},
+  '2026-04-27': { label: 'Mon Apr 27', events: [
+    { time:'08:30', end:'10:00', icon:'☕', title:'Breakfast',              loc:'La Véranda' },
+    { time:'10:00', end:'13:00', icon:'🏖️', title:'Beach & Swim',           loc:'Club Dauphin' },
+    { time:'13:00', end:'14:30', icon:'🥗', title:'Lunch by the Sea',       loc:'Club Dauphin' },
+    { time:'15:00', end:'17:00', icon:'💆', title:'Spa Session',            loc:'Spa Guerlain' },
+    { time:'19:30', end:'22:00', icon:'🌆', title:'Dinner in Nice',         loc:'Nice Vieux-Port' },
+  ]},
+  '2026-04-28': { label: 'Tue Apr 28', events: [
+    { time:'08:30', end:'09:30', icon:'☕', title:'Breakfast',              loc:'La Véranda' },
+    { time:'10:00', end:'13:00', icon:'🎰', title:'Day Trip — Monaco',      loc:'Monte-Carlo' },
+    { time:'13:00', end:'14:30', icon:'🥩', title:'Lunch in Monaco',        loc:'Le Louis XV' },
+    { time:'15:00', end:'17:30', icon:'🚗', title:'Return & Freshen Up',    loc:'Hotel' },
+    { time:'20:00', end:'22:30', icon:'🍽️', title:'Hotel Dinner',           loc:'Le Cap Restaurant' },
+  ]},
+  '2026-04-29': { label: 'Wed Apr 29', events: [
+    { time:'08:30', end:'09:30', icon:'☕', title:'Breakfast',              loc:'La Véranda' },
+    { time:'10:00', end:'12:30', icon:'🚶', title:'Cap Ferrat Walk',        loc:'Coastal Path' },
+    { time:'12:30', end:'14:00', icon:'🐟', title:'Seaside Lunch',          loc:'La Goëlette' },
+    { time:'15:00', end:'18:00', icon:'🏊', title:'Afternoon at Pool',      loc:'Hotel Pool' },
+    { time:'20:00', end:'23:00', icon:'✨', title:'Farewell Gala Dinner',   loc:'Le Cap Restaurant' },
+  ]},
+  '2026-04-30': { label: 'Thu Apr 30', events: [
+    { time:'08:00', end:'09:30', icon:'☕', title:'Final Breakfast',        loc:'La Véranda' },
+    { time:'09:30', end:'11:30', icon:'🌊', title:'Morning Swim',           loc:'Club Dauphin' },
+    { time:'11:30', end:'12:00', icon:'🧳', title:'Check-out',              loc:'Grand-Hôtel du Cap-Ferrat' },
+    { time:'12:30', end:'15:00', icon:'✈️', title:'Airport Transfer',       loc:"Nice Côte d'Azur Airport" },
+  ]},
+};
+
+function getParts(date, tz) {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+  }).formatToParts(date).reduce((a, p) => { a[p.type] = p.value; return a; }, {});
+}
+
+function getTZOffMin(tz) {
+  const d = new Date(), p = getParts(d, tz);
+  const h = parseInt(p.hour) % 24;
+  const tzD = new Date(Date.UTC(+p.year, +p.month - 1, +p.day, h, +p.minute, +p.second));
+  return (tzD - d) / 60000;
+}
+
+function toMin(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
+
+createApp({
+  setup() {
+    const now = ref(new Date());
+    const weather = ref(null);
+    const agendaOpen = ref(false);
+    const activeDay = ref('2026-04-26');
+    const reunionDate = ref('2026-05-01');
+    const convTime = ref('');
+    const convFrom = ref('Paris');
+    const showSettings = ref(false);
+    let timer;
+
+    onMounted(() => {
+      timer = setInterval(() => { now.value = new Date(); }, 1000);
+      const td = new Intl.DateTimeFormat('en-CA', { timeZone: TZ_T }).format(new Date());
+      if (AGENDA[td]) activeDay.value = td;
+      fetchWeather();
+    });
+    onUnmounted(() => clearInterval(timer));
+
+    async function fetchWeather() {
+      try {
+        const r = await fetch('https://wttr.in/Cap+Ferrat,France?format=j1');
+        const d = await r.json();
+        const c = d.current_condition[0];
+        weather.value = {
+          temp: c.temp_C, feels: c.FeelsLikeC,
+          desc: c.weatherDesc[0].value, hum: c.humidity
+        };
+      } catch {
+        weather.value = { temp: '--', feels: '--', desc: 'unavailable', hum: '--' };
+      }
+    }
+
+    const fmt = (tz, opts) =>
+      new Intl.DateTimeFormat('en-US', { timeZone: tz, ...opts }).format(now.value);
+
+    const taraTime = computed(() =>
+      fmt(TZ_T, { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }));
+    const meagTime = computed(() =>
+      fmt(TZ_M, { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }));
+    const taraDate = computed(() =>
+      fmt(TZ_T, { weekday:'short', month:'short', day:'numeric' }));
+    const meagDate = computed(() =>
+      fmt(TZ_M, { weekday:'short', month:'short', day:'numeric' }));
+
+    const todayKey = computed(() =>
+      new Intl.DateTimeFormat('en-CA', { timeZone: TZ_T }).format(now.value));
+
+    const taraMins = computed(() => {
+      const p = getParts(now.value, TZ_T);
+      return (parseInt(p.hour) % 24) * 60 + parseInt(p.minute);
+    });
+
+    const currentActivity = computed(() => {
+      const day = AGENDA[todayKey.value];
+      if (!day) return null;
+      return day.events.find(e =>
+        taraMins.value >= toMin(e.time) && taraMins.value < toMin(e.end)
+      ) || null;
+    });
+
+    const nextActivity = computed(() => {
+      const day = AGENDA[todayKey.value];
+      if (!day) return null;
+      return day.events.find(e => toMin(e.time) > taraMins.value) || null;
+    });
+
+    const countdown = computed(() => {
+      const t = new Date(reunionDate.value + 'T12:00:00Z');
+      const today = new Date(); today.setUTCHours(12, 0, 0, 0);
+      const diff = Math.round((t - today) / 86400000);
+      if (diff <= 0) return { days: '🎉', label: 'Together!' };
+      return { days: diff, label: diff === 1 ? 'day to go' : 'days to go' };
+    });
+
+    const bgGradient = computed(() => {
+      const h = parseInt(getParts(now.value, TZ_T).hour) % 24;
+      if (h >= 5  && h < 7)  return 'linear-gradient(135deg,#f093fb,#f5576c,#fda085)';
+      if (h >= 7  && h < 10) return 'linear-gradient(135deg,#667eea,#764ba2,#6fb1fc)';
+      if (h >= 10 && h < 14) return 'linear-gradient(135deg,#4facfe,#00c6fb,#56d8a4)';
+      if (h >= 14 && h < 17) return 'linear-gradient(135deg,#43e97b,#38f9d7,#4facfe)';
+      if (h >= 17 && h < 21) return 'linear-gradient(135deg,#fa709a,#fee140,#f6d365)';
+      if (h >= 21)            return 'linear-gradient(135deg,#a18cd1,#fbc2eb,#ff9a9e)';
+      return 'linear-gradient(135deg,#1a1a2e,#16213e,#2c4a7c)';
+    });
+
+    const overlapBarStyle = computed(() => ({ left: '54.17%', width: '37.5%' }));
+    const nowBarStyle = computed(() => ({ left: (taraMins.value / 1440 * 100) + '%' }));
+
+    function isCurrentEvent(e) {
+      if (activeDay.value !== todayKey.value) return false;
+      return taraMins.value >= toMin(e.time) && taraMins.value < toMin(e.end);
+    }
+
+    const convertedTime = computed(() => {
+      if (!convTime.value) return null;
+      const [h, m] = convTime.value.split(':').map(Number);
+      const po = getTZOffMin(TZ_T), mo = getTZOffMin(TZ_M);
+      const diff = convFrom.value === 'Paris' ? mo - po : po - mo;
+      const total = ((h * 60 + m + diff) % 1440 + 1440) % 1440;
+      return String(Math.floor(total / 60)).padStart(2, '0') + ':' + String(total % 60).padStart(2, '0');
+    });
+
+    return {
+      AGENDA, weather, agendaOpen, activeDay, reunionDate,
+      convTime, convFrom, convertedTime, showSettings,
+      taraTime, meagTime, taraDate, meagDate,
+      currentActivity, nextActivity, countdown,
+      bgGradient, overlapBarStyle, nowBarStyle, isCurrentEvent,
+    };
+  },
+
+  template: `
+<div :style="{background: bgGradient}" class="min-h-screen p-4 transition-all duration-1000">
+  <div class="max-w-lg mx-auto space-y-4 pb-8">
+
+    <div class="text-center pt-6 pb-2">
+      <h1 class="text-4xl font-bold text-white tracking-tight">nearish</h1>
+      <p class="text-white/50 text-sm mt-1">Tara &amp; Meag · always close</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div class="glass rounded-2xl p-4 text-center">
+        <div class="text-white/50 text-xs mb-1">Tara 🌊</div>
+        <div class="text-white text-2xl font-bold font-mono tracking-wide">{{ taraTime }}</div>
+        <div class="text-white/40 text-xs mt-1">Cap Ferrat</div>
+        <div class="text-white/50 text-xs mt-0.5">{{ taraDate }}</div>
+      </div>
+      <div class="glass rounded-2xl p-4 text-center">
+        <div class="text-white/50 text-xs mb-1">Meag 🏙️</div>
+        <div class="text-white text-2xl font-bold font-mono tracking-wide">{{ meagTime }}</div>
+        <div class="text-white/40 text-xs mt-1">Philadelphia</div>
+        <div class="text-white/50 text-xs mt-0.5">{{ meagDate }}</div>
+      </div>
+    </div>
+
+    <div v-if="currentActivity || nextActivity" class="glass rounded-2xl p-4 space-y-3">
+      <div v-if="currentActivity">
+        <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Happening now</div>
+        <div class="text-white font-semibold text-base">{{ currentActivity.icon }} {{ currentActivity.title }}</div>
+        <div class="text-white/50 text-xs mt-0.5">{{ currentActivity.loc }} · until {{ currentActivity.end }}</div>
+      </div>
+      <div v-if="nextActivity" :class="currentActivity ? 'border-t border-white/10 pt-3' : ''">
+        <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Up next</div>
+        <div class="text-white font-medium text-sm">{{ nextActivity.icon }} {{ nextActivity.title }}</div>
+        <div class="text-white/50 text-xs mt-0.5">{{ nextActivity.loc }} · at {{ nextActivity.time }}</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div class="glass rounded-2xl p-4">
+        <div class="text-white/40 text-xs uppercase tracking-widest mb-2">Weather</div>
+        <template v-if="weather">
+          <template v-if="weather.temp !== '--'">
+            <div class="text-white text-2xl font-bold">{{ weather.temp }}°C</div>
+            <div class="text-white/60 text-xs mt-1 leading-tight">{{ weather.desc }}</div>
+            <div class="text-white/40 text-xs mt-1">feels {{ weather.feels }}° · {{ weather.hum }}%</div>
+          </template>
+          <div v-else class="text-white/40 text-sm">unavailable</div>
+        </template>
+        <div v-else class="text-white/40 text-sm">loading...</div>
+      </div>
+      <div class="glass rounded-2xl p-4 text-center flex flex-col justify-center">
+        <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Reunion</div>
+        <div class="text-white text-3xl font-bold">{{ countdown.days }}</div>
+        <div class="text-white/50 text-xs mt-1">{{ countdown.label }}</div>
+      </div>
+    </div>
+
+    <div class="glass rounded-2xl p-4">
+      <div class="text-white/40 text-xs uppercase tracking-widest mb-1">Golden Hours</div>
+      <div class="text-white/60 text-xs mb-3">Both awake: 1 PM–10 PM Paris · 7 AM–4 PM Philly</div>
+      <div class="relative h-3 bg-white/10 rounded-full overflow-hidden">
+        <div class="absolute inset-y-0 bg-yellow-300/50 rounded-full" :style="overlapBarStyle"></div>
+        <div class="absolute inset-y-0 w-0.5 bg-white shadow rounded-full" :style="nowBarStyle"></div>
+      </div>
+      <div class="flex justify-between text-white/30 text-xs mt-2 px-0.5">
+        <span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>12a</span>
+      </div>
+    </div>
+
+    <div class="glass rounded-2xl overflow-hidden">
+      <button @click="agendaOpen = !agendaOpen"
+        class="w-full px-4 py-3 flex justify-between items-center text-white hover:bg-white/10 transition-colors text-left">
+        <span class="font-semibold text-sm">📅 Tara's Schedule</span>
+        <span class="text-white/40 text-xs">{{ agendaOpen ? '▲ hide' : '▼ show' }}</span>
+      </button>
+      <div v-if="agendaOpen">
+        <div class="flex gap-2 px-4 pb-2 overflow-x-auto">
+          <button v-for="(day, key) in AGENDA" :key="key" @click="activeDay = key"
+            class="gbtn text-xs px-3 py-1.5 rounded-full whitespace-nowrap shrink-0"
+            :class="activeDay === key ? 'bg-white/30 font-bold' : ''">
+            {{ day.label }}
+          </button>
+        </div>
+        <div class="px-4 pb-4 space-y-1.5">
+          <div v-for="e in AGENDA[activeDay].events" :key="e.time"
+            class="flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors"
+            :class="isCurrentEvent(e) ? 'bg-white/20 ring-1 ring-white/30' : 'bg-white/5 hover:bg-white/10'">
+            <span class="text-lg shrink-0 mt-0.5">{{ e.icon }}</span>
+            <div class="flex-1 min-w-0">
+              <div class="text-white text-sm font-medium leading-tight">{{ e.title }}</div>
+              <div class="text-white/40 text-xs mt-0.5 truncate">{{ e.time }}–{{ e.end }} · {{ e.loc }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass rounded-2xl p-4">
+      <div class="text-white/40 text-xs uppercase tracking-widest mb-3">Time Converter</div>
+      <div class="flex gap-2">
+        <input v-model="convTime" type="time" class="ginput flex-1 rounded-xl px-3 py-2 text-sm min-w-0">
+        <select v-model="convFrom" class="ginput rounded-xl px-3 py-2 text-sm">
+          <option value="Paris">Paris</option>
+          <option value="Philly">Philly</option>
+        </select>
+      </div>
+      <div v-if="convertedTime" class="mt-3 flex items-baseline gap-2">
+        <span class="text-white text-2xl font-bold font-mono">{{ convertedTime }}</span>
+        <span class="text-white/50 text-sm">in {{ convFrom === 'Paris' ? 'Philadelphia' : 'Cap Ferrat' }}</span>
+      </div>
+      <div v-else class="mt-2 text-white/30 text-xs">pick a time above to convert</div>
+    </div>
+
+    <div class="glass rounded-2xl overflow-hidden">
+      <button @click="showSettings = !showSettings"
+        class="w-full px-4 py-3 flex justify-between items-center hover:bg-white/10 transition-colors">
+        <span class="text-white/50 text-xs uppercase tracking-widest">⚙ Settings</span>
+        <span class="text-white/30 text-xs">{{ showSettings ? '▲' : '▼' }}</span>
+      </button>
+      <div v-if="showSettings" class="px-4 pb-4">
+        <label class="text-white/50 text-xs block mb-1.5">Reunion Date</label>
+        <input v-model="reunionDate" type="date" class="ginput rounded-xl px-3 py-2 text-sm w-full">
+      </div>
+    </div>
+
+    <div class="text-center text-white/20 text-xs pt-2">made with love · nearish</div>
+
+  </div>
+</div>
+`
+}).mount('#app');
+</script>
+</body>
+</html>
