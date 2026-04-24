@@ -173,6 +173,45 @@ createApp({
       return day.events.find(e => toMin(e.time) > taraMins.value) || null;
     });
 
+    const taraStatus = computed(() => {
+      const key = todayKey.value;
+      const mins = taraMins.value;
+      const h = Math.floor(mins / 60);
+
+      if (key < '2026-04-26') {
+        return { headline: 'packing for Cap Ferrat 🧳', detail: 'Trip starts April 26' };
+      }
+      if (key > '2026-04-30') {
+        return { headline: 'back home 🏡', detail: 'Trip wrapped — see you soon!' };
+      }
+
+      const day = AGENDA[key];
+      if (!day) return { headline: 'enjoying the day ☀️', detail: 'Cap Ferrat' };
+
+      if (h < 7) {
+        const first = day.events[0];
+        return { headline: 'asleep 😴', detail: `Up next: ${first.icon} ${first.title} at ${fmt12(first.time)}` };
+      }
+
+      const current = day.events.find(e => mins >= toMin(e.time) && mins < toMin(e.end));
+      if (current) {
+        return {
+          headline: `${current.icon} ${current.title}`,
+          detail: `${current.loc} · until ${fmt12(current.end)}`
+        };
+      }
+
+      const next = day.events.find(e => toMin(e.time) > mins);
+      if (next) {
+        return {
+          headline: 'some free time ✨',
+          detail: `Next: ${next.icon} ${next.title} at ${fmt12(next.time)}`
+        };
+      }
+
+      return { headline: 'winding down 🌙', detail: 'Done for the day in Cap Ferrat' };
+    });
+
     const countdown = computed(() => {
       const t = new Date(reunionDate.value + 'T12:00:00Z');
       const today = new Date(); today.setUTCHours(12, 0, 0, 0);
@@ -215,7 +254,7 @@ createApp({
       convTime, convFrom, convertedTime, showSettings,
       taraTime, meagTime, taraDate, meagDate,
       currentActivity, nextActivity, countdown,
-      bgGradient, overlapBarStyle, nowBarStyle, isCurrentEvent, fmt12,
+      bgGradient, overlapBarStyle, nowBarStyle, isCurrentEvent, fmt12, taraStatus,
     };
   },
 
@@ -226,6 +265,12 @@ createApp({
     <div class="text-center pt-6 pb-2">
       <h1 class="text-4xl font-bold text-white tracking-tight">nearish</h1>
       <p class="text-white/85 text-sm mt-1">Tara &amp; Meag · always close</p>
+    </div>
+
+    <div class="glass rounded-2xl px-5 py-4">
+      <div class="text-white/70 text-xs uppercase tracking-widest mb-1.5">Tara is currently</div>
+      <div class="text-white font-bold text-xl leading-snug">{{ taraStatus.headline }}</div>
+      <div class="text-white/85 text-sm mt-1">{{ taraStatus.detail }}</div>
     </div>
 
     <div class="grid grid-cols-2 gap-3">
